@@ -24,8 +24,9 @@ exports.studentOrInstructorContent = (req, res) => {
 
 exports.signUp = async (req, res) => {
   try {
+    //create user
     const user = await User.create({
-      name: req.body.name,
+      name: req.body.name.toString(),
       email: req.body.email,
       password: bcrypt.hashSync(req.body.password, 8),
       type: req.body.type,
@@ -42,13 +43,17 @@ exports.signUp = async (req, res) => {
 
 exports.getUserById = async (req, res, next) => {
   try {
+    //find user without returning password
     const user = await User.scope("withoutPassword").findOne({
       where: { id: req.params.id },
     });
 
+    //user not found
     if (!user) {
       throw new RequestError(404, "User not found");
     }
+
+    ////user tries to access other user's content
     if (req.params.id != req.userId) {
       throw new RequestError(403, "User without permission");
     }
@@ -64,32 +69,40 @@ exports.updateUser = async (req, res, next) => {
   try {
     const data = req.body;
 
+    // find user on db
     const user = await User.findOne({
       where: { id: req.params.id },
     });
 
+    //user not found
     if (!user) {
       throw new RequestError(404, "User not found");
     }
 
+    //user tries to update other user's content
     if (req.params.id != req.userId) {
       console.log(req.params, req.userId);
       throw new RequestError(403, "User without permission");
     }
 
+    //update password
     if (
       data.password != null &&
       validateData.isValidPassword(data.password) == true
     ) {
-      data.password = bcrypt.hashSync(req.body.password, 8);
+      // password exists and is valid
+      data.password = bcrypt.hashSync(req.body.password, 8); //encrypt password
     } else if (
       data.password != null &&
       validateData.isValidPassword(data.password) == false
     ) {
+      //password exists and is not valid
       throw new ValidationError(400, "Password cannot be empty");
     }
 
+    //update type
     if (data.type != null && validateData.isValidType(data.type) == false) {
+      // type exists and is not valid
       throw new ValidationError(
         400,
         `Type must be "student" or "instructor", got ${typeof data.type} ${
@@ -98,14 +111,19 @@ exports.updateUser = async (req, res, next) => {
       );
     }
 
+    //update email
     if (data.email != null && validateData.isValidEmail(data.email) == false) {
+      //email exists an is not valid
       throw new ValidationError(400, "Invalid email");
     }
 
+    //update name
     if (data.name != null && validateData.isValidName(req.body.name) == false) {
+      //name exists an is not valid
       throw new ValidationError(400, "Name cannot be empty");
     }
 
+    //update user
     const updatedUser = await User.update(
       { ...data },
       { where: { id: req.params.id } }

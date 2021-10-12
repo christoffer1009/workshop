@@ -13,16 +13,16 @@ module.exports = (sequelize, Sequelize) => {
       },
       email: {
         type: Sequelize.STRING,
-        allowNull: false,
         unique: true,
+        allowNull: false,
       },
+
       password: {
         type: Sequelize.STRING,
         allowNull: false,
       },
       type: {
         type: Sequelize.STRING,
-        // type: Sequelize.ENUM("student", "instructor"),
         allowNull: false,
       },
     },

@@ -14,7 +14,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// db.sequelize.sync();
+db.sequelize.sync();
 
 app.use("/api/workshop/users", userRouter);
 app.use("/api/workshop/auth", authRouter);
