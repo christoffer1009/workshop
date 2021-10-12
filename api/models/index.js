@@ -3,8 +3,7 @@ const Sequelize = require("sequelize");
 
 const sequelize = new Sequelize(config.DB, config.USER, config.PASSWORD, {
   host: config.HOST,
-  dialect: config.dialect,
-  operatorsAliases: false,
+  dialect: config.DIALECT,
 
   pool: {
     max: config.pool.max,
@@ -20,20 +19,46 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.user = require("../models/user.model.js")(sequelize, Sequelize);
-// db.type = require("../models/type.model.js")(sequelize, Sequelize);
+db.theme = require("../models/theme.model.js")(sequelize, Sequelize);
+db.interest = require("../models/interest.model.js")(sequelize, Sequelize);
+db.schedule = require("../models/schedule.model.js")(sequelize, Sequelize);
+db.scheduleTheme = require("../models/scheduleTheme.model.js")(
+  sequelize,
+  Sequelize
+);
 
-// db.type.belongsToMany(db.user, {
-//   through: "user_types",
-//   foreignKey: "typeId",
-//   otherKey: "userId",
-// });
+// associations
+db.theme.belongsTo(db.user, {
+  foreignKey: {
+    name: "user_id",
+    allowNull: false,
+  },
+});
 
-// db.user.belongsToMany(db.type, {
-//   through: "user_types",
-//   foreignKey: "userId",
-//   otherKey: "typeId",
-// });
+db.interest.belongsTo(db.user, {
+  foreignKey: {
+    name: "user_id",
+    allowNull: false,
+  },
+});
 
-// db.Types = ["student", "instructor"];
+db.interest.belongsTo(db.theme, {
+  foreignKey: {
+    name: "theme_id",
+    allowNull: false,
+  },
+});
+
+db.theme.belongsToMany(db.schedule, {
+  through: db.scheduleTheme,
+  foreignKey: "theme_id",
+  otherKey: "schedule_id",
+});
+
+db.schedule.belongsToMany(db.theme, {
+  through: db.scheduleTheme,
+  foreignKey: "schedule_id",
+  otherKey: "theme_id",
+});
 
 module.exports = db;
