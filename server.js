@@ -3,7 +3,7 @@ const cors = require("cors");
 const db = require("./api/models");
 const userRouter = require("./api/routes/user.routes");
 const authRouter = require("./api/routes/auth.routes");
-
+const themeRouter = require("./api/routes/theme.routes");
 const app = express();
 
 var corsOptions = {
@@ -18,6 +18,7 @@ db.sequelize.sync();
 
 app.use("/api/workshop/users", userRouter);
 app.use("/api/workshop/auth", authRouter);
+app.use("/api/workshop/themes", themeRouter);
 
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to workshop application." });
