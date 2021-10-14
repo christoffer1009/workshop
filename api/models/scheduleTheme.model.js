@@ -1,11 +1,15 @@
 module.exports = (sequelize, Sequelize) => {
-  const scheduleTheme = sequelize.define("schedules_themes", {
-    id: {
-      type: Sequelize.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
+  const scheduleTheme = sequelize.define(
+    "schedules_themes",
+    {
+      id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
     },
-  });
+    { timestamps: false }
+  );
 
   return scheduleTheme;
 };

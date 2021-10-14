@@ -51,14 +51,18 @@ db.interest.belongsTo(db.theme, {
 
 db.theme.belongsToMany(db.schedule, {
   through: db.scheduleTheme,
-  foreignKey: "theme_id",
-  otherKey: "schedule_id",
+  foreignKey: { name: "theme_id", allowNull: false },
+  otherKey: { name: "schedule_id", allowNull: false },
 });
 
 db.schedule.belongsToMany(db.theme, {
   through: db.scheduleTheme,
-  foreignKey: "schedule_id",
-  otherKey: "theme_id",
+  foreignKey: { name: "schedule_id", allowNull: false },
+  otherKey: { name: "theme_id", allowNull: false },
+});
+
+db.schedule.belongsTo(db.user, {
+  foreignKey: { name: "instructor_id", allowNull: false },
 });
 
 module.exports = db;

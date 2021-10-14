@@ -32,6 +32,7 @@ module.exports = (sequelize, Sequelize) => {
           attributes: { exclude: ["password"] },
         },
       },
+      timestamps: false,
     }
   );
 
