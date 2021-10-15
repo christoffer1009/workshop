@@ -1,9 +1,12 @@
 const db = require("../models");
 const Theme = db.theme;
 const User = db.user;
+const Schedule = db.schedule;
 const Op = db.Sequelize.Op;
 const ValidationError = require("../services/ValidationError");
 const RequestError = require("../services/RequestError");
+const { schedule } = require("../models");
+// const { schedule } = require("../models");
 
 const getPagination = (page, size) => {
   // let limit = size ? +size : 5;
@@ -90,19 +93,69 @@ exports.findAll = async (req, res) => {
 exports.findOne = async (req, res) => {
   try {
     const id = req.params.id;
-    const theme = await Theme.findByPk(id);
+    const theme = await Theme.findByPk(id, {
+      distinct: true,
+      attributes: ["id", "title", "user_id"],
+      include: [
+        {
+          model: Schedule,
+          as: "schedules",
+          attributes: ["id", "title", "instructor_id", "date"],
+          through: {
+            attributes: [],
+          },
+        },
+      ],
+    });
+
+    const dataSchedule = await Schedule.findAndCountAll({
+      where: {},
+
+      distinct: true,
+      attributes: ["id", "title", "date", "instructor_id"],
+      include: [
+        {
+          model: Theme,
+          as: "themes",
+          attributes: ["id", "title"],
+          through: {
+            attributes: [],
+          },
+        },
+      ],
+    });
+
+    let resultSchedules = [];
+
+    dataSchedule.rows.some((schedule) => {
+      schedule.themes.some((theme) => {
+        if (theme.id == id) {
+          resultSchedules.push(schedule);
+        }
+      });
+    });
 
     const user = await User.scope("withoutPassword").findByPk(theme.user_id);
+
+    const asyncRes = await Promise.all(
+      resultSchedules.map(async (schedule) => {
+        let instructor = await User.findByPk(schedule.instructor_id);
+        return { schedule, instructor: instructor.name };
+      })
+    );
+
+    console.log(asyncRes);
+
     const response = {
       id: theme.id,
       title: theme.title,
       description: theme.description,
       createdBy: user.name,
       interested: "TODO usuários interessados",
-      schedule: "TODO agendamentos com este tema",
+      schedules: asyncRes,
     };
 
-    res.send(response);
+    res.json({ response });
   } catch (err) {
     res.status(500).json({ message: err.message });
     console.error(err);

@@ -1,10 +1,8 @@
 const db = require("../models");
 const User = db.user;
-// const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const RequestError = require("../services/RequestError");
 const ValidationError = require("../services/ValidationError");
-// const validateData = require("../services/validateData");
 
 exports.allAccess = (req, res) => {
   res.status(200).json({ msg: "Public Content." });

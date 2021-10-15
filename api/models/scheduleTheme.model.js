@@ -1,5 +1,5 @@
 module.exports = (sequelize, Sequelize) => {
-  const scheduleTheme = sequelize.define(
+  const ScheduleTheme = sequelize.define(
     "schedules_themes",
     {
       id: {
@@ -11,5 +11,5 @@ module.exports = (sequelize, Sequelize) => {
     { timestamps: false }
   );
 
-  return scheduleTheme;
+  return ScheduleTheme;
 };
