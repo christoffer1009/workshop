@@ -106,7 +106,6 @@ exports.findOne = async (req, res) => {
 
     const dataSchedule = await Schedule.findAndCountAll({
       where: {},
-
       distinct: true,
       attributes: ["id", "title", "date", "instructor_id"],
       include: [

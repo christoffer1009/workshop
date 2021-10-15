@@ -3,7 +3,6 @@ const db = require("../models");
 const Schedule = db.schedule;
 const Theme = db.theme;
 const Interest = db.interest;
-const ScheduleTheme = db.scheduleTheme;
 const RequestError = require("../services/RequestError");
 const ValidationError = require("../services/ValidationError");
 
@@ -27,7 +26,6 @@ const getPagination = (page, size) => {
 };
 
 const getPagingData = (dataInterest, page, limit) => {
-  //   const { count: totalItems, rows: data } = dataInterest;
   const totalItems = dataInterest.length;
   const data = dataInterest;
   const currentPage = page ? +page : 0;
@@ -110,14 +108,6 @@ exports.getInterests = async (req, res, next) => {
 
   const { page, pageSize } = req.query;
   try {
-    // const interest = await Interest.findAndCountAll({
-    //   where: { user_id: Number(userId) },
-    // });
-
-    // if (interest.user_id != req.userId) {
-    //   throw new RequestError(403, "User without permission");
-    // }
-
     const { limit, offset } = getPagination(page - 1, parseInt(pageSize));
 
     const interests = await Interest.findAndCountAll({
@@ -138,29 +128,6 @@ exports.getInterests = async (req, res, next) => {
         };
       })
     );
-
-    // interestData = {
-    //   ...interests.count,
-    //   ...data,
-    // };
-
-    // console.log(themes);
-
-    // const data = interests.rows.map((interest) => {
-    //   return { id: interest.id, userId: interest.user_id, theme: theme.id };
-    // });
-
-    console.log(data);
-
-    // const resultinterests = await Promise.all(
-    //     interests.rows.map(async (interest) => {
-    //       if(interest.themes)
-
-    //       return { id: theme.id, tilte: theme.title };
-    //     })
-    //   );
-
-    // console.log(resultThemes);
 
     const response = getPagingData(data, page, limit);
     res.json(response);

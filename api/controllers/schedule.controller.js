@@ -109,13 +109,11 @@ exports.getSchedulesByinstructor = async (req, res, next) => {
             let interests = await Interest.findAll({
               where: { theme_id: theme.id },
             });
-
             let users = await Promise.all(
               interests.map(async (interest) => {
                 return User.findByPk(interest.user_id);
               })
             );
-
             return {
               id: theme.id,
               tilte: theme.title,
