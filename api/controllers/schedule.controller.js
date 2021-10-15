@@ -2,13 +2,12 @@
 const db = require("../models");
 const Schedule = db.schedule;
 const Theme = db.theme;
-const ScheduleTheme = db.scheduleTheme;
+const User = db.user;
+const Interest = db.interest;
 const RequestError = require("../services/RequestError");
 const ValidationError = require("../services/ValidationError");
 
 const getPagination = (page, size) => {
-  // let limit = size ? +size : 5;
-
   console.log("PAGE", typeof page, "SIZE", typeof size);
 
   let limit = size;
@@ -26,17 +25,16 @@ const getPagination = (page, size) => {
 };
 
 const getPagingData = (dataSchedule, page, limit) => {
-  const { count: totalItems, rows: data } = dataSchedule;
+  const totalItems = dataSchedule.length;
+  const data = dataSchedule;
   const currentPage = page ? +page : 0;
   const totalPages = Math.ceil(totalItems / limit);
 
   return { totalItems, data, totalPages, currentPage };
 };
 
-//POST/schedules
 exports.createSchedule = async (req, res, next) => {
   try {
-    // Validate request
     if (!req.body.title || !req.body.description) {
       throw new RequestError(400, "Title and description cannot be empty!");
     }
@@ -54,7 +52,6 @@ exports.createSchedule = async (req, res, next) => {
       throw new RequestError(400, "Date must be greater than today");
     }
 
-    // Create a schedule
     const data = {
       title: req.body.title,
       description: req.body.description,
@@ -63,7 +60,6 @@ exports.createSchedule = async (req, res, next) => {
       instructor_id: req.userId,
     };
 
-    // Save schedule in the database
     const schedule = await Schedule.create(data);
 
     data.themes.forEach(async (theme) => {
@@ -71,37 +67,19 @@ exports.createSchedule = async (req, res, next) => {
       await schedule.addTheme(newTheme);
     });
 
-    // const schedule = Schedule.findByPk(newSchedule.id, {
-    //   include: [
-    //     {
-    //       model: ScheduleTheme,
-    //       as: "schedules",
-    //       attributes: ["id", "title", "description"],
-    //       through: {
-    //         attributes: [],
-    //       },
-    //     },
-    //   ],
-    // });
-
     res.status(201).json({
       message: "Schedule was registered successfully!",
       scheduleId: schedule.id,
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(err.status).json({ message: err.message });
     console.error(err);
   }
 };
 
-//GET/schedules
-
-// Falta retornar interesses
-
 exports.getSchedulesByinstructor = async (req, res, next) => {
   try {
     const { page, pageSize } = req.query;
-    console.log("PAGE", typeof page, "SIZE", typeof pageSize);
     const { limit, offset } = getPagination(page - 1, parseInt(pageSize));
 
     const dataSchedule = await Schedule.findAndCountAll({
@@ -122,15 +100,41 @@ exports.getSchedulesByinstructor = async (req, res, next) => {
       ],
     });
 
-    const response = getPagingData(dataSchedule, page, limit);
+    const schedules = dataSchedule.rows;
+
+    const resultSchedules = await Promise.all(
+      schedules.map(async ({ id, themes }) => {
+        const res = await Promise.all(
+          themes.map(async (theme) => {
+            let interests = await Interest.findAll({
+              where: { theme_id: theme.id },
+            });
+
+            let users = await Promise.all(
+              interests.map(async (interest) => {
+                return User.findByPk(interest.user_id);
+              })
+            );
+
+            return {
+              id: theme.id,
+              tilte: theme.title,
+              interesteds: users.map((user) => user.name),
+            };
+          })
+        );
+        return { id, themes: res };
+      })
+    );
+
+    const response = getPagingData(resultSchedules, page, limit);
     res.send(response);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(err.status).json({ message: err.message });
     console.error(err);
   }
 };
 
-//PATCH/schedules/{id}
 exports.updateSchedule = async (req, res) => {
   try {
     const id = req.params.id;
@@ -168,7 +172,6 @@ exports.updateSchedule = async (req, res) => {
       throw new ValidationError(400, "Themes cannot be updated");
     }
 
-    //update schedule
     const updatedSchedule = await Schedule.update(
       { ...data },
       { where: { id: id } }
@@ -176,12 +179,11 @@ exports.updateSchedule = async (req, res) => {
 
     res.status(204).json({ message: "ok" });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(err.status).json({ message: err.message });
     console.error(err);
   }
 };
 
-//DELETE/schedules/{id}/themes/{themeId}
 exports.deleteScheduleTheme = async (req, res) => {
   const { id, themeId } = req.params;
   try {
@@ -205,12 +207,11 @@ exports.deleteScheduleTheme = async (req, res) => {
 
     res.status(204).json({ message: "ok" });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(err.status).json({ message: err.message });
     console.error(err);
   }
 };
 
-//POST/schedules/{id}/themes
 exports.addScheduleTheme = async (req, res) => {
   const { id } = req.params;
   const { themeId } = req.body;
@@ -234,7 +235,7 @@ exports.addScheduleTheme = async (req, res) => {
     await schedule.addTheme(themeId);
 
     res.status(204).json({ message: "ok" });
-  } catch (error) {
-    return res.status(400).json({ message: error.message });
+  } catch (err) {
+    return res.status(err.status).json({ message: error.message });
   }
 };

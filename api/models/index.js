@@ -50,15 +50,12 @@ db.interest.belongsTo(db.theme, {
 });
 
 db.theme.belongsToMany(db.schedule, {
-  // through: db.scheduleTheme,
   through: "schedules_themes",
   as: "schedules",
   foreignKey: { name: "theme_id", allowNull: false },
-  // otherKey: { name: "schedule_id", allowNull: false },
 });
 
 db.schedule.belongsToMany(db.theme, {
-  // through: db.scheduleTheme,
   through: "schedules_themes",
   as: "themes",
   foreignKey: { name: "schedule_id", allowNull: false },

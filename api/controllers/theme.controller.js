@@ -2,15 +2,11 @@ const db = require("../models");
 const Theme = db.theme;
 const User = db.user;
 const Schedule = db.schedule;
-const Op = db.Sequelize.Op;
+const Interest = db.interest;
 const ValidationError = require("../services/ValidationError");
 const RequestError = require("../services/RequestError");
-const { schedule } = require("../models");
-// const { schedule } = require("../models");
 
 const getPagination = (page, size) => {
-  // let limit = size ? +size : 5;
-
   console.log("PAGE", typeof page, "SIZE", typeof size);
 
   let limit = size;
@@ -77,7 +73,7 @@ exports.create = async (req, res) => {
 exports.findAll = async (req, res) => {
   try {
     const { page, pageSize } = req.query;
-    console.log("PAGE", typeof page, "SIZE", typeof pageSize);
+
     const { limit, offset } = getPagination(page - 1, parseInt(pageSize));
 
     const data = await Theme.findAndCountAll({ where: {}, limit, offset });
@@ -144,14 +140,23 @@ exports.findOne = async (req, res) => {
       })
     );
 
-    console.log(asyncRes);
+    const interests = await Interest.findAll({ where: { theme_id: id } });
+
+    const interesteds = await Promise.all(
+      interests.map(async (interest) => {
+        let interested = await User.scope("withoutPassword").findByPk(
+          interest.user_id
+        );
+        return interested.name;
+      })
+    );
 
     const response = {
       id: theme.id,
       title: theme.title,
       description: theme.description,
       createdBy: user.name,
-      interested: "TODO usuários interessados",
+      interesteds: interesteds,
       schedules: asyncRes,
     };
 
